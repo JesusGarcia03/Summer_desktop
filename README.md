@@ -1,4 +1,3 @@
-# Summer_desktop # Summer_desktop
 # Social Life app project
 # Description
 This repository will consist of our files for our Social life app both our desktop application as well as our mobile app files the purpose of this application much like many other applications is to create a way to easily connect with other via an app in order to more easily create and maintain social connection with other, featers will include user data i.e. profile creation and customizaton, ways to communicate amongst each individual person as well as more broad ways of communicating like community post and event posts.
