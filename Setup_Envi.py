@@ -74,33 +74,37 @@ def login():
 		messagebox.showerror("Login", "Invalid username or password.")
 
 def openRegistrationWindow():
-	global reg_first_name, reg_last_name, reg_username, reg_email, reg_password
-	reg = Toplevel(root)
-	reg.title("Register")
+    global reg_first_name, reg_last_name, reg_username, reg_email, reg_password
+    reg = Toplevel(root)
+    reg.title("Register")
 
-	Label(reg, text="Please fill in the details below to register:").pack(pady=10)
-	
-	Label(reg, text="First Name").grid(row=0, column=0, sticky="e", padx=5, pady=2)
-	reg_first_name = Entry(reg, width=30)
-	reg_first_name.grid(row=0, column=1, padx=5, pady=2)
+    # Use GRID for everything in this window
+    Label(reg, text="Please fill in the details below to register:")\
+        .grid(row=0, column=0, columnspan=2, pady=10, sticky="w")
 
-	Label(reg, text="Last Name").grid(row=1, column=0, sticky="e", padx=5, pady=2)
-	reg_last_name = Entry(reg, width=30)
-	reg_last_name.grid(row=1, column=1, padx=5, pady=2)
+    Label(reg, text="First Name").grid(row=1, column=0, sticky="e", padx=5, pady=2)
+    reg_first_name = Entry(reg, width=30)
+    reg_first_name.grid(row=1, column=1, padx=5, pady=2)
 
-	Label(reg, text="Email").grid(row=2, column=0, sticky="e", padx=5, pady=2)
-	reg_email = Entry(reg, width=30)
-	reg_email.grid(row=2, column=1, padx=5, pady=2)
+    Label(reg, text="Last Name").grid(row=2, column=0, sticky="e", padx=5, pady=2)
+    reg_last_name = Entry(reg, width=30)
+    reg_last_name.grid(row=2, column=1, padx=5, pady=2)
 
-	Label(reg, text="Username").grid(row=3, column=0, sticky="e", padx=5, pady=2)
-	reg_username = Entry(reg, width=30)
-	reg_username.grid(row=3, column=1, padx=5, pady=2)
+    Label(reg, text="Email").grid(row=3, column=0, sticky="e", padx=5, pady=2)
+    reg_email = Entry(reg, width=30)
+    reg_email.grid(row=3, column=1, padx=5, pady=2)
 
-	Label(reg, text="Password").grid(row=4, column=0, sticky="e", padx=5, pady=2)
-	reg_password = Entry(reg, width=30, show="*")
-	reg_password.grid(row=4, column=1, padx=5, pady=2)
+    Label(reg, text="Username").grid(row=4, column=0, sticky="e", padx=5, pady=2)
+    reg_username = Entry(reg, width=30)
+    reg_username.grid(row=4, column=1, padx=5, pady=2)
 
-	Button(reg, text="Create Account", command=submit).grid(row=5, column=0, columnspan=2, pady=8)
+    Label(reg, text="Password").grid(row=5, column=0, sticky="e", padx=5, pady=2)
+    reg_password = Entry(reg, width=30, show="*")
+    reg_password.grid(row=5, column=1, padx=5, pady=2)
+
+    Button(reg, text="Create Account", command=submit)\
+        .grid(row=6, column=0, columnspan=2, pady=8)
+
 
 
 #####################################################
