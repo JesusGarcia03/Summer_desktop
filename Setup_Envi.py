@@ -1,8 +1,8 @@
 from tkinter import *
-from tkinter import messagebox
-from tkinter import ttk
+from tkinter import messagebox, filedialog, ttk
 import sqlite3
 from datetime import datetime
+from PIL import Image, ImageTk   # for image handling
 
 root = Tk()
 root.title('Data app')
@@ -19,18 +19,19 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS users(
                     email  text,
                     password text)""")
 
-# title and body now for posts
 cursor.execute("""CREATE TABLE IF NOT EXISTS posts(
                     username text,
                     title text,
                     body text,
-                    timestamp text)""")
+                    timestamp text,
+                    image_path text)""")
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS comments(
                     post_id INTEGER,
                     username text,
                     comment text,
-                    timestamp text)""")
+                    timestamp text,
+                    image_path text)""")
 
 dataConnect.commit()
 dataConnect.close()
@@ -84,6 +85,13 @@ def create_scrollable_feed(parent_frame):
     inner_frame.bind("<Configure>", on_frame_configure)
     return inner_frame
 
+# -------------------- Image Picker --------------------
+def choose_image():
+    file_path = filedialog.askopenfilename(
+        filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif")]
+    )
+    return file_path if file_path else None
+
 # -------------------- Home Page --------------------
 def homePage(current_user):
     home = Toplevel(root)
@@ -95,6 +103,9 @@ def homePage(current_user):
 
     selected_post_id = {'id': None, 'frame': None}
     show_timestamps = BooleanVar(value=True)
+
+    post_image_path = {'path': None}
+    comment_image_path = {'path': None}
 
     # -------------------- Home Tab --------------------
     home_tab = Frame(notebook)
@@ -124,13 +135,21 @@ def homePage(current_user):
     home_body_entry = Text(home_left_frame, width=40, height=5)
     home_body_entry.grid(row=3, column=0, columnspan=2, pady=(0,5))
 
+    Button(home_left_frame, text="Attach Image",
+           command=lambda: post_image_path.update({'path': choose_image()})).grid(row=4, column=0, sticky="w")
+
     Button(home_left_frame, text="Post",
-           command=lambda: create_post(home_title_entry, home_body_entry)).grid(row=4, column=1, sticky="e", pady=(0,10))
+           command=lambda: create_post(home_title_entry, home_body_entry, post_image_path)).grid(row=4, column=1, sticky="e", pady=(0,10))
 
     # Comment entry + button
     home_comment_entry = Entry(home_left_frame, width=40)
     home_comment_entry.grid(row=5, column=0)
-    Button(home_left_frame, text="Comment", command=lambda: add_comment(home_comment_entry)).grid(row=5, column=1, padx=(5,0))
+
+    Button(home_left_frame, text="Attach Img",
+           command=lambda: comment_image_path.update({'path': choose_image()})).grid(row=6, column=0, sticky="w")
+
+    Button(home_left_frame, text="Comment",
+           command=lambda: add_comment(home_comment_entry, comment_image_path)).grid(row=5, column=1, padx=(5,0))
 
     # -------------------- Posts Tab --------------------
     posts_tab = Frame(notebook)
@@ -143,22 +162,28 @@ def homePage(current_user):
     posts_left_frame = Frame(posts_tab)
     posts_left_frame.pack(side=LEFT, fill=Y, padx=10, pady=10)
 
-    # Title
     Label(posts_left_frame, text="Title").grid(row=0, column=0, sticky="w")
     posts_title_entry = Entry(posts_left_frame, width=40)
     posts_title_entry.grid(row=1, column=0, columnspan=2, pady=(0,5))
 
-    # Body
     Label(posts_left_frame, text="Body").grid(row=2, column=0, sticky="w")
     posts_body_entry = Text(posts_left_frame, width=40, height=5)
     posts_body_entry.grid(row=3, column=0, columnspan=2, pady=(0,5))
 
+    Button(posts_left_frame, text="Attach Image",
+           command=lambda: post_image_path.update({'path': choose_image()})).grid(row=4, column=0, sticky="w")
+
     Button(posts_left_frame, text="Post",
-           command=lambda: create_post(posts_title_entry, posts_body_entry)).grid(row=4, column=1, sticky="e", pady=(0,10))
+           command=lambda: create_post(posts_title_entry, posts_body_entry, post_image_path)).grid(row=4, column=1, sticky="e", pady=(0,10))
 
     posts_comment_entry = Entry(posts_left_frame, width=40)
     posts_comment_entry.grid(row=5, column=0)
-    Button(posts_left_frame, text="Comment", command=lambda: add_comment(posts_comment_entry)).grid(row=5, column=1, padx=(5,0))
+
+    Button(posts_left_frame, text="Attach Img",
+           command=lambda: comment_image_path.update({'path': choose_image()})).grid(row=6, column=0, sticky="w")
+
+    Button(posts_left_frame, text="Comment",
+           command=lambda: add_comment(posts_comment_entry, comment_image_path)).grid(row=5, column=1, padx=(5,0))
 
     # -------------------- Users Tab --------------------
     users_tab = Frame(notebook)
@@ -180,8 +205,8 @@ def homePage(current_user):
             widget.destroy()
         con = sqlite3.connect('myData.db')
         cur = con.cursor()
-        cur.execute("SELECT rowid, username, title, body, timestamp FROM posts")
-        for post_id, u, post_title, post_body, ts in cur.fetchall():
+        cur.execute("SELECT rowid, username, title, body, timestamp, image_path FROM posts")
+        for post_id, u, post_title, post_body, ts, img_path in cur.fetchall():
             post_frame = Frame(frame, bd=1, relief=SOLID, padx=5, pady=5)
             post_frame.pack(fill=X, pady=5)
 
@@ -191,55 +216,81 @@ def homePage(current_user):
             body_label = Label(post_frame, text=post_body, wraplength=600, justify=LEFT)
             body_label.pack(anchor="w")
 
+            # Show image if available
+            if img_path:
+                try:
+                    img = Image.open(img_path)
+                    img.thumbnail((200,200))
+                    tk_img = ImageTk.PhotoImage(img)
+                    img_label = Label(post_frame, image=tk_img)
+                    img_label.image = tk_img
+                    img_label.pack(anchor="w", pady=5)
+                except:
+                    Label(post_frame, text="[Image not found]").pack(anchor="w")
+
             if show_timestamps.get():
                 ts_label = Label(post_frame, text=f"[{ts}]", font=("Arial",9))
                 ts_label.pack(anchor="w")
 
-            post_frame.bind( "<Button-1>", lambda e, pid=post_id, f=post_frame: select_post(pid, f))
+            post_frame.bind("<Button-1>", lambda e, pid=post_id, f=post_frame: select_post(pid, f))
             title_label.bind("<Button-1>", lambda e, pid=post_id, f=post_frame: select_post(pid, f))
             body_label.bind("<Button-1>",  lambda e, pid=post_id, f=post_frame: select_post(pid, f))
 
-            cur.execute("SELECT username, comment, timestamp FROM comments WHERE post_id=?", (post_id,))
-            for cu, ct, cts in cur.fetchall():
+            cur.execute("SELECT username, comment, timestamp, image_path FROM comments WHERE post_id=?", (post_id,))
+            for cu, ct, cts, cimg in cur.fetchall():
                 comment_frame = Frame(post_frame, bd=0, padx=10, pady=2)
                 comment_frame.pack(fill=X)
                 comment_label = Label(comment_frame, text=f"→ {cu}: {ct}", font=("Arial",10,"bold"))
                 comment_label.pack(anchor="w")
+                if cimg:
+                    try:
+                        cimage = Image.open(cimg)
+                        cimage.thumbnail((150,150))
+                        tk_cimg = ImageTk.PhotoImage(cimage)
+                        cimg_label = Label(comment_frame, image=tk_cimg)
+                        cimg_label.image = tk_cimg
+                        cimg_label.pack(anchor="w", pady=3)
+                    except:
+                        Label(comment_frame, text="[Image not found]").pack(anchor="w")
                 if show_timestamps.get():
                     cts_label = Label(comment_frame, text=f"[{cts}]", font=("Arial",8))
                     cts_label.pack(anchor="w")
         con.close()
 
-    def create_post(title_entry, body_widget):
+    def create_post(title_entry, body_widget, img_holder):
         title = title_entry.get().strip()
         body  = body_widget.get("1.0", END).strip()
+        img_path = img_holder['path']
         if title and body:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             con = sqlite3.connect('myData.db')
             cur = con.cursor()
-            cur.execute("INSERT INTO posts(username,title,body,timestamp) VALUES(?,?,?,?)",
-                        (current_user, title, body, timestamp))
+            cur.execute("INSERT INTO posts(username,title,body,timestamp,image_path) VALUES(?,?,?,?,?)",
+                        (current_user, title, body, timestamp, img_path))
             con.commit()
             con.close()
             title_entry.delete(0, END)
             body_widget.delete("1.0", END)
+            img_holder['path'] = None
             refresh_feed(home_feed_frame)
             refresh_feed(posts_feed_frame)
 
-    def add_comment(entry_widget):
+    def add_comment(entry_widget, img_holder):
         if selected_post_id['id'] is None:
             messagebox.showerror("Error", "Please click a post first.")
             return
         text = entry_widget.get().strip()
-        if text:
+        img_path = img_holder['path']
+        if text or img_path:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             con = sqlite3.connect('myData.db')
             cur = con.cursor()
-            cur.execute("INSERT INTO comments(post_id, username, comment, timestamp) VALUES(?,?,?,?)",
-                        (selected_post_id['id'], current_user, text, timestamp))
+            cur.execute("INSERT INTO comments(post_id, username, comment, timestamp, image_path) VALUES(?,?,?,?,?)",
+                        (selected_post_id['id'], current_user, text, timestamp, img_path))
             con.commit()
             con.close()
             entry_widget.delete(0, END)
+            img_holder['path'] = None
             refresh_feed(home_feed_frame)
             refresh_feed(posts_feed_frame)
 
