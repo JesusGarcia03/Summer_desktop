@@ -4,10 +4,11 @@ This repository will consist of our files for our Social life app both our deskt
 # Features
 Public Post
   Feature that will allow for individual users to create community posts for others on the app to see.
+  Ability to upload images with post.
 Comments
   Allows the users to interact with each other's posts.
 
-(Phase 2)
+(Phase 2: Future Goals)
 Event calendar
   Calendar that will allow for users to create special dates on certain times and dates that will inform them of events to come.
 Profile customization
@@ -20,5 +21,5 @@ Profile customization
 Frameworks:
   - Incorporated database using sqlite3
   - Used tkinter for most of software framework
-  
+  - Used Pillow for image uploading feature
   
